@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAGI PLUS Woo, Una Abogada Extraordinaria</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+            scroll-behavior: smooth;
+            position: relative; /* Necesario para el overlay */
+        }
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://media.themoviedb.org/t/p/w780/tmgtlnBnoFvk52xZBO7Z0pTmN9b.jpg'); /* Imagen de fondo */
+            background-size: cover;
+            background-position: center;
+            z-index: 0; /* Detrás de todo */
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Opacidad del fondo */
+            z-index: 1; /* Sobre la imagen de fondo */
+        }
+        .header {
+            height: 300px;
+            z-index: 2; /* Por encima del overlay */
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .content {
+            padding: 20px;
+            position: relative;
+            z-index: 2; /* Por encima del overlay */
+        }
+        .details h1 {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        .details p {
+            margin: 5px 0;
+        }
+        .buttons {
+            margin: 10px 0;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-lang, .btn-episode, .btn-download {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn-download {
+            background-color: #FFD700; /* Dorado */
+            color: black; /* Texto negro */
+        }
+        .btn-lang:active, .btn-episode:active, .btn-download:active {
+            background-color: white; /* Cambia a blanco al presionar */
+            color: black; /* Texto negro */
+        }
+        .season-list, .episode-list {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .season-item, .episode-item {
+            background-color: #444;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            width: 100px;
+            position: relative;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .episode-item.selected, .season-item.selected {
+            background-color: #FFD700; /* Dorado */
+            color: black;
+        }
+        .episodes {
+            display: none;
+        }
+        .episode-item::before {
+            content: attr(data-label);
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 8px;
+            color: white;
+            background-color: #34568B;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .btn-lang {
+            background: linear-gradient(to right, #00FF00, #FF0000, #FF69B4, #FFFFE0);
+            border-radius: 10px;
+            color: #000;
+            text-shadow: 1px 1px 2px #000;
+            transition: background-position 0.5s ease-in-out;
+        }
+        .btn-lang:hover {
+            background-position: 100% 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div> <!-• Imagen de fondo -->
+    <div class="overlay"></div> <!-• Capa de opacidad -->
+    <div class="header" id="videoSection">
+        <iframe id="videoPlayer" src=""></iframe> <!-• URL inicial -->
+    </div>
+    <div class="content">
+        <div class="details">
+            <h1>Woo, Una Abogada Extraordinaria</h1>
+            <p><h4>Publicado: 1999 (TV-15) Drama</h4></p>
+            <p>Sinopsis: Mi nombre es Woo Young-woo, ya sea que se lea directamente o al revés. Kayak, escritura, rotador, mediodía, coche de carreras, Woo Young-woo.</p>
+            <div class="buttons">
+                <button class="btn-lang" onclick="toggleFullscreen()">Pantalla Completa</button> 
+                <button class="btn-episode">Selecciona un capítulo</button>
+                <button class="btn-download">Descargar</button> <!-• Botón de descarga -->
+            </div>
+            <div class="seasons">
+                <h3>Temporadas</h3>
+                <div class="season-list">
+                    <div class="season-item" data-season="1">Temporada 1</div>
+                    
+                </div>
+            </div>
+            <div class="episodes" id="episodesSection" style="display: none;">
+                <h3>Capítulos</h3>
+                <div class="episode-list">
+                    <!-• Capítulos se mostrarán aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const seasonItems = document.querySelectorAll('.season-item');
+        const episodeList = document.querySelector('.episode-list');
+        const episodesSection = document.getElementById('episodesSection');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoSection = document.getElementById('videoSection');
+        const episodeButton = document.querySelector('.btn-episode');
+        const downloadButton = document.querySelector('.btn-download');
+        const capítulos = [
+            { temporada: 1, episodios: Array.from({length: 16}, (_, i) => `Episodio ${i + 1}`) },
+            { temporada: 2, episodios: Array.from({length: 18}, (_, i) => `Episodio ${i + 1}`) },
+            { temporada: 3, episodios: Array.from({length: 11}, (_, i) => `Episodio ${i + 1}`) },
+            { temporada: 4, episodios: Array.from({length: 8}, (_, i) => `Episodio ${i + 1}`) }
+        ];
+        // URLs de visualización de los episodios por temporada
+        const urlsVisualización = {
+            1: [
+                'URL 1 DEL VÍDEO', 
+                'URL 2 DEL VIDEO', 
+
+// ... más URLs para otros capítulos de la temporada 1
+            ],
+            1: [
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/fwe2/46/s8/2/K/d/6/l/Kd6ly.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E1)&tiempo=60', 
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/fwe2/fa/s8/2/V/M/5/l/VM5ly.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E2)&tiempo=60', 
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/fwe1/a9/s8/2/7/L/a/m/7Lamy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E3)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/fwe2/63/s8/2/I/G/a/m/IGamy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E4)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/fwe1/f8/s8/2/f/R/a/m/fRamy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E5)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/fwe2/51/s8/2/r/3/a/m/r3amy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E6)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/fwe1/16/s8/2/8/_/a/m/8_amy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E7)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/fwe1/a6/s8/2/l/a/b/m/labmy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E8)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/fwe2/4b/s8/2/z/e/b/m/zebmy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E9)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/fwe1/87/s8/2/O/e/b/m/Oebmy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E10)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/fwe1/87/s8/2/O/e/b/m/Oebmy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E10)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/fwe1/6c/s8/2/2/3/i/m/23imy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E12)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/fwe1/a2/s8/2/9/q/h/m/9qhmy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E13)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/fwe1/e9/s8/2/M/H/h/m/MHhmy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E14)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/fwe1/83/s8/2/3/z/h/m/3zhmy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E15)&tiempo=60',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/fwe2/b3/s8/2/r/Q/h/m/rQhmy.aaa.mp4&titulo=Woo,%20Una%20Abogada%20Extraordinaria:(T1%20-%20E16)&tiempo=60',
+
+                // ... más URLs para otros capítulos de la temporada 2
+            ],
+            3: [
+                'https://ryderjet.com/embed/krd4ddpdlzjw', 
+                'https://example.com/view/season3/episode2.html',
+                'https://example.com/view/season3/episode3.html',
+                // ... más URLs para otros capítulos de la temporada 3
+            ],
+            4: [
+                'https://ryderjet.com/embed/5uio5usvgsjg', 
+                'https://example.com/view/season4/episode2.html', 
+                'https://example.com/view/season4/episode3.html',
+                // ... más URLs para otros capítulos de la temporada 4
+            ]
+        };
+        // URLs de descarga de los episodios por temporada
+        const urlsDescarga = {
+            1: [
+                'https://example.com/download/season1/episode1.mp4',
+                'https://example.com/download/season1/episode2.mp4',
+                'https://example.com/download/season1/episode3.mp4',
+                // ... más URLs para otros capítulos de la temporada 1
+            ],
+            2: [
+                'https://example.com/download/season2/episode1.mp4',
+                'https://example.com/download/season2/episode2.mp4',
+                'https://example.com/download/season2/episode3.mp4',
+                // ... más URLs para otros capítulos de la temporada 2
+            ],
+            3: [
+                'https://example.com/download/season3/episode1.mp4',
+                'https://example.com/download/season3/episode2.mp4',
+                'https://example.com/download/season3/episode3.mp4',
+                // ... más URLs para otros capítulos de la temporada 3
+            ],
+            4: [
+                'https://example.com/download/season4/episode1.mp4',
+                'https://example.com/download/season4/episode2.mp4',
+                'https://example.com/download/season4/episode3.mp4',
+                // ... más URLs para otros capítulos de la temporada 4
+            ]
+        };
+
+        seasonItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const season = parseInt(item.dataset.season);
+                episodeList.innerHTML = ''; // Limpia la lista de capítulos
+                const episodiosTemporada = capítulos.find(cap => cap.temporada === season);
+                if (episodiosTemporada) {
+                    episodiosTemporada.episodios.forEach((episodio, index) => {
+                        const episodeItem = document.createElement('div');
+                        episodeItem.classList.add('episode-item');
+                        episodeItem.textContent = episodio;
+                        episodeItem.setAttribute('data-label', 'ES'); // Añadir etiqueta de subtítulos
+                        episodeItem.addEventListener('click', () => {
+                            let urlVisualización = urlsVisualización[season][index];
+                            videoPlayer.src = urlVisualización;
+                            videoSection.scrollIntoView();
+                            episodeButton.textContent = episodio;
+                            downloadButton.onclick = () => {
+                                window.open(urlsDescarga[season][index], '_blank');
+                            };
+                            episodeItem.classList.add('selected');
+                        });
+                        episodeList.appendChild(episodeItem);
+                    });
+                    episodesSection.style.display = 'block'; // Muestra la sección de capítulos
+                    document.querySelectorAll('.season-item').forEach(el => el.classList.remove('selected'));
+                    item.classList.add('selected'); // Marca la temporada seleccionada
+                }
+            });
+        });
+
+        function toggleFullscreen() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                videoSection.requestFullscreen();
+            }
+        }
+    </script>
+</body>
+</html>
