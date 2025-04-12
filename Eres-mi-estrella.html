@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAGI PLUS BELLESA VERDADERA</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+            scroll-behavior: smooth;
+            position: relative; /* Necesario para el overlay */
+        }
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://media.themoviedb.org/t/p/w780/A9OMk9nybfRQUX7ds8rpd4lmdaE.jpg'); /* Imagen de fondo */
+            background-size: cover;
+            background-position: center;
+            z-index: 0; /* Detrás de todo */
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Opacidad del fondo */
+            z-index: 1; /* Sobre la imagen de fondo */
+        }
+        .header {
+            height: 300px;
+            z-index: 2; /* Por encima del overlay */
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .content {
+            padding: 20px;
+            position: relative;
+            z-index: 2; /* Por encima del overlay */
+        }
+        .details h1 {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        .details p {
+            margin: 5px 0;
+        }
+        .buttons {
+            margin: 10px 0;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-lang, .btn-episode, .btn-download {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn-download {
+            background-color: #FFD700; /* Dorado */
+            color: black; /* Texto negro */
+        }
+        .btn-lang:active, .btn-episode:active, .btn-download:active {
+            background-color: white; /* Cambia a blanco al presionar */
+            color: black; /* Texto negro */
+        }
+        .season-list, .episode-list {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .season-item, .episode-item {
+            background-color: #444;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            width: 100px;
+            position: relative;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .episode-item.selected, .season-item.selected {
+            background-color: #FFD700; /* Dorado */
+            color: black;
+        }
+        .episodes {
+            display: none;
+        }
+        .episode-item::before {
+            content: attr(data-label);
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 8px;
+            color: white;
+            background-color: #34568B;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .btn-lang {
+            background: linear-gradient(to right, #00FF00, #FF0000, #FF69B4, #FFFFE0);
+            border-radius: 10px;
+            color: #000;
+            text-shadow: 1px 1px 2px #000;
+            transition: background-position 0.5s ease-in-out;
+        }
+        .btn-lang:hover {
+            background-position: 100% 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div> <!-• Imagen de fondo -->
+    <div class="overlay"></div> <!-• Capa de opacidad -->
+    <div class="header" id="videoSection">
+        <iframe id="videoPlayer" src=""></iframe> <!-• URL inicial -->
+    </div>
+    <div class="content">
+        <div class="details">
+            <h1>Belleza Verdadera</h1>
+            <p><h4>Publicado: 2020 (TV-15) Comedia, Drama</h4></p>
+            <p>Sinopsis: [True Beauty] Después de ver vídeos de belleza en Internet, una tímida fanática del cómic domina el arte del maquillaje y ve cómo su posición social se dispara cuando se convierte en la chica más bonita de su escuela, literalmente, de la noche a la mañana. ¿Pero su estatus de élite será de corta duración? ¿Cuánto tiempo puede ella mantener su "yo real" en secreto? ¿Y qué hay de ese chico lindo que le gusta? ¿Te imaginas si se enterara de la verdad? Lee Su Ho es el único que ha visto su rostro desnudo, quien no solo es uno de los mejores estudiantes, sino que también llama la atención de todas las chicas que lo rodean. A pesar de su popularidad, Lee Su Ho tiene un lado tímido, se pone rojo brillante cuando se avergüenza y dice cosas que lamenta. Por otro lado están Han Seo Jun, un chico alto y atractivo como un modelo, rudo a primera vista pero también con un par de secretos; y Kang Su Jin, una diosa en toda regla, al menos físicamente hablando.</p>
+            <div class="buttons">
+                <button class="btn-lang" onclick="toggleFullscreen()">Pantalla Completa</button> 
+                <button class="btn-episode">Selecciona un capítulo</button>
+                <button class="btn-download">Descargar</button> <!-• Botón de descarga -->
+            </div>
+            <div class="seasons">
+                <h3>Temporadas</h3>
+                <div class="season-list">
+                    <div class="season-item" data-season="1">Temporada 1</div>
+                    
+                </div>
+            </div>
+            <div class="episodes" id="episodesSection" style="display: none;">
+                <h3>Capítulos</h3>
+                <div class="episode-list">
+                    <!-• Capítulos se mostrarán aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const seasonItems = document.querySelectorAll('.season-item');
+        const episodeList = document.querySelector('.episode-list');
+        const episodesSection = document.getElementById('episodesSection');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoSection = document.getElementById('videoSection');
+        const episodeButton = document.querySelector('.btn-episode');
+        const downloadButton = document.querySelector('.btn-download');
+        const capítulos = [
+            { temporada: 1, episodios: Array.from({length: 16}, (_, i) => `Episodio ${i + 1}`) },
+            { temporada: 2, episodios: Array.from({length: 18}, (_, i) => `Episodio ${i + 1}`) },
+            { temporada: 3, episodios: Array.from({length: 11}, (_, i) => `Episodio ${i + 1}`) },
+            { temporada: 4, episodios: Array.from({length: 8}, (_, i) => `Episodio ${i + 1}`) }
+        ];
+        // URLs de visualización de los episodios por temporada
+        const urlsVisualización = {
+           1: [
+                'https://nagi-plus.github.io/VID_NAGI_PLUS.github.io/Vid.html?link=https://ia802308.us.archive.org/7/items/ere-013/ERE@001.mp4&titulo=Eres%20Mi%20Estrella%20:(T1%20-%20E1)&tiempo=15', 
+                'https://nagi-plus.github.io/VID_NAGI_PLUS.github.io/Vid.html?link=https://ia802308.us.archive.org/7/items/ere-013/ERE@002.mp4&titulo=Eres%20Mi%20Estrella%20:(T1%20-%20E2)&tiempo=15', 
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/T/F/b/v/TFbvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E3)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/s8/2/s/T/c/v/sTcvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E4)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/s8/2/i/K/d/v/iKdvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E5)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/Y/N/j/v/YNjvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E6)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/D/W/j/v/DWjvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E7)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/s8/2/g/Y/j/v/gYjvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E8)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/s8/2/v/Y/j/v/vYjvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E9)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/s8/2/Q/4/j/v/Q4jvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E10)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/F/y/n/v/Fynvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E11)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://1a-1791.com/video/s8/2/5/O/n/v/5Onvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E12)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/w/T/n/v/wTnvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E13)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/r/Y/n/v/rYnvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E14)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/3/W/n/v/3Wnvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E15)&tiempo=30',
+                'https://nagi-plus4.github.io/embed.github.io/REPRODUCTOR-OFICIAL-NAGI-PLUS.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/5/S/B/v/5SBvv.aaa.mp4&titulo=Belleza%20Verdadera%20%20:(T1%20-%20E16)&tiempo=30',
+
+                // ... más URLs para otros capítulos de la temporada 2
+            ],
+            3: [
+                'https://ryderjet.com/embed/krd4ddpdlzjw', 
+                'https://example.com/view/season3/episode2.html',
+                'https://example.com/view/season3/episode3.html',
+                // ... más URLs para otros capítulos de la temporada 3
+            ],
+            4: [
+                'https://ryderjet.com/embed/5uio5usvgsjg', 
+                'https://example.com/view/season4/episode2.html', 
+                'https://example.com/view/season4/episode3.html',
+                // ... más URLs para otros capítulos de la temporada 4
+            ]
+        };
+        // URLs de descarga de los episodios por temporada
+        const urlsDescarga = {
+            1: [
+                'https://example.com/download/season1/episode1.mp4',
+                'https://example.com/download/season1/episode2.mp4',
+                'https://example.com/download/season1/episode3.mp4',
+                // ... más URLs para otros capítulos de la temporada 1
+            ],
+            2: [
+                'https://example.com/download/season2/episode1.mp4',
+                'https://example.com/download/season2/episode2.mp4',
+                'https://example.com/download/season2/episode3.mp4',
+                // ... más URLs para otros capítulos de la temporada 2
+            ],
+            3: [
+                'https://example.com/download/season3/episode1.mp4',
+                'https://example.com/download/season3/episode2.mp4',
+                'https://example.com/download/season3/episode3.mp4',
+                // ... más URLs para otros capítulos de la temporada 3
+            ],
+            4: [
+                'https://example.com/download/season4/episode1.mp4',
+                'https://example.com/download/season4/episode2.mp4',
+                'https://example.com/download/season4/episode3.mp4',
+                // ... más URLs para otros capítulos de la temporada 4
+            ]
+        };
+
+        seasonItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const season = parseInt(item.dataset.season);
+                episodeList.innerHTML = ''; // Limpia la lista de capítulos
+                const episodiosTemporada = capítulos.find(cap => cap.temporada === season);
+                if (episodiosTemporada) {
+                    episodiosTemporada.episodios.forEach((episodio, index) => {
+                        const episodeItem = document.createElement('div');
+                        episodeItem.classList.add('episode-item');
+                        episodeItem.textContent = episodio;
+                        episodeItem.setAttribute('data-label', 'LAT'); // Añadir etiqueta de subtítulos
+                        episodeItem.addEventListener('click', () => {
+                            let urlVisualización = urlsVisualización[season][index];
+                            videoPlayer.src = urlVisualización;
+                            videoSection.scrollIntoView();
+                            episodeButton.textContent = episodio;
+                            downloadButton.onclick = () => {
+                                window.open(urlsDescarga[season][index], '_blank');
+                            };
+                            episodeItem.classList.add('selected');
+                        });
+                        episodeList.appendChild(episodeItem);
+                    });
+                    episodesSection.style.display = 'block'; // Muestra la sección de capítulos
+                    document.querySelectorAll('.season-item').forEach(el => el.classList.remove('selected'));
+                    item.classList.add('selected'); // Marca la temporada seleccionada
+                }
+            });
+        });
+
+        function toggleFullscreen() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                videoSection.requestFullscreen();
+            }
+        }
+    </script>
+</body>
+</html>
