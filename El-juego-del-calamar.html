@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>El juego del calamar</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet"/>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      background-image: url('https://media.themoviedb.org/t/p/w780/2meX1nMdScFOoV4370rqHWKmXhY.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    .overlay {
+      background-color: rgba(0, 0, 0, 0.8);
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    .container-fluid {
+      position: relative;
+      padding: 20px;
+    }
+    .video-section {
+      width: 100%;
+      height: 315px;
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .description {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 20px 0;
+    }
+    .icons {
+      display: flex;
+      gap: 10px;
+    }
+    .icon {
+      font-size: 1.5em;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+    .icon:hover {
+      color: #ff0000;
+    }
+    .season-select {
+      background-color: #222;
+      color: #fff;
+      border: 2px solid #555;
+      border-radius: 5px;
+      padding: 10px 25px;
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%23fff" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 10px top 50%;
+      background-size: 12px;
+    }
+    .episodes {
+      display: flex;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: #333 #111;
+      margin-bottom: 20px;
+    }
+    .episodes::-webkit-scrollbar {
+      height: 8px;
+    }
+    .episodes::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 10px;
+    }
+    .episode-button {
+      flex: 0 0 auto;
+      margin: 5px;
+      padding: 15px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #555, #333);
+      color: white;
+      font-size: 1em;
+      border-radius: 0px;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+    .episode-button.active {
+      background: linear-gradient(135deg, #ff4b2b, #ff416c);
+      transform: scale(1.1);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    }
+    .synopsis {
+      margin: 20px 0;
+    }
+    *:focus {
+      outline: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="container-fluid">
+    <div class="video-section">
+      <iframe id="video-iframe" src="https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/G/g/L/C/GgLCq.caa.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T1%20-%20E1)&tiempo=10" allowfullscreen></iframe>
+
+    </div>
+
+    <div class="description">
+      <h1 id="series-title">El juego del calamar</h1>
+      <div class="icons">
+        <i class="fas fa-expand icon" onclick="toggleFullScreen()" title="Pantalla Completa"></i>
+        <i class="fas fa-download icon" onclick="downloadSeries()" title="Descargar Serie"></i>
+      </div>
+    </div>
+
+    <div class="season-info d-flex justify-content-between align-items-center mb-2">
+      <select id="season-select" class="season-select" onchange="changeSeason(this.value)">
+        <option value="1">Temporada 1</option>
+        <option value="2">Temporada 2</option>
+      </select>
+      <span>T1 hasta el 9</span>
+      <span>T2 hasta el 7</span>
+    </div>
+
+    <div class="episodes" id="episodes-container"></div>
+
+    <div class="synopsis">
+      <h2>Sinopsis</h2>
+      <p id="synopsis-text">
+         Cientos de personas con problemas de dinero aceptan una invitación rarísima para competir en juegos infantiles. Dentro los esperan un tentador premio y desafíos letales.
+      </p>
+      <button id="toggle-button" class="btn btn-link text-light p-0">Ver más</button>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    const seasons = {
+      1: [
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/G/g/L/C/GgLCq.caa.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T1%20-%20E1)&tiempo=10"',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/O/2/_/C/O2_Cq.baa.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T1%20-%20E2)&tiempo=10',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/T/8/a/D/T8aDq.baa.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T1%20-%20E3)&tiempo=10',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/k/X/b/D/kXbDq.baa.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T1%20-%20E4)&tiempo=10',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/c/D/c/D/cDcDq.caa.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T1%20-%20E5)&tiempo=10',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/S/P/c/D/SPcDq.baa.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T1%20-%20E6)&tiempo=10',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/n/8/c/D/n8cDq.caa.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T1%20-%20E7)&tiempo=10',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/k/A/d/D/kAdDq.caa.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T1%20-%20E8)&tiempo=10',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://hugh.cdn.rumble.cloud/video/s8/2/9/7/d/D/97dDq.baa.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T1%20-%20E9)&tiempo=10',
+      ],
+        
+      2: [
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://seed171.bitchute.com/MWp0QUjJylLP/YmIbLKm4Ydrt.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T2%20-%20E1)&tiempo=15',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://seed122.bitchute.com/MWp0QUjJylLP/NrXL5JCcUQOo.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T2%20-%20E2)&tiempo=15',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://zggg98sgwbg1gh.bitchute.com/MWp0QUjJylLP/xWaZgEPtJYhv.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T2%20-%20E3)&tiempo=15',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://seed306.bitchute.com/MWp0QUjJylLP/riRSzkcStEXO.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T2%20-%20E4)&tiempo=15',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://zggg98sgwbg1gh.bitchute.com/MWp0QUjJylLP/4dWfyAalxJup.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T2%20-%20E5)&tiempo=15',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://seed125.bitchute.com/MWp0QUjJylLP/hxuK1yM3Y3ZL.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T2%20-%20E6)&tiempo=15',
+        
+        'https://gineshm.github.io/cinelatmobile.github.io/beta.html?link=https://zggg98sgwbg1gh.bitchute.com/MWp0QUjJylLP/oE6DIMHIMQEn.mp4&titulo=➟El%20Juego%20Del%20Clamar:(T2%20-%20E7)&tiempo=15',
+      ],
+    };
+
+    const episodesContainer = document.getElementById('episodes-container');
+    const videoIframe = document.getElementById('video-iframe');
+    const seasonSelect = document.getElementById('season-select');
+    const seriesTitle = document.getElementById('series-title').textContent.trim().replace(/\s+/g, '_');
+
+    function changeSeason(seasonNumber) {
+      episodesContainer.innerHTML = '';
+      const videoURLs = seasons[seasonNumber];
+
+      videoURLs.forEach((videoURL, index) => {
+        const button = document.createElement('button');
+        button.className = 'episode-button';
+        button.textContent = index + 1;
+
+        button.addEventListener('click', function () {
+          document.querySelectorAll('.episode-button').forEach(btn => btn.classList.remove('active'));
+          this.classList.add('active');
+          videoIframe.src = videoURL;
+          this.blur();
+          localStorage.setItem(`${seriesTitle}_ultimoEpisodio`, index);
+          localStorage.setItem(`${seriesTitle}_ultimaTemporada`, seasonNumber);
+        });
+
+        episodesContainer.appendChild(button);
+      });
+
+      const ultimoEpisodio = localStorage.getItem(`${seriesTitle}_ultimoEpisodio`);
+      const ultimaTemporada = localStorage.getItem(`${seriesTitle}_ultimaTemporada`);
+
+      if (ultimoEpisodio !== null && `${seasonNumber}` === ultimaTemporada) {
+        const btn = document.querySelectorAll('.episode-button')[ultimoEpisodio];
+        if (btn) btn.click();
+      }
+
+      localStorage.setItem(`${seriesTitle}_ultimaTemporadaSeleccionada`, seasonNumber);
+    }
+
+    const synopsisText = document.getElementById('synopsis-text');
+    const toggleButton = document.getElementById('toggle-button');
+    const fullText = synopsisText.textContent;
+    const truncatedText = fullText.substring(0, 100) + '...';
+    synopsisText.textContent = truncatedText;
+
+    toggleButton.addEventListener('click', function () {
+      if (toggleButton.textContent === 'Ver más') {
+        synopsisText.textContent = fullText;
+        toggleButton.textContent = 'Ver menos';
+      } else {
+        synopsisText.textContent = truncatedText;
+        toggleButton.textContent = 'Ver más';
+      }
+    });
+
+    function toggleFullScreen() {
+      if (videoIframe.requestFullscreen) {
+        videoIframe.requestFullscreen();
+      } else if (videoIframe.mozRequestFullScreen) {
+        videoIframe.mozRequestFullScreen();
+      } else if (videoIframe.webkitRequestFullscreen) {
+        videoIframe.webkitRequestFullscreen();
+      } else if (videoIframe.msRequestFullscreen) {
+        videoIframe.msRequestFullscreen();
+      }
+      Swal.fire({
+        icon: 'info',
+        title: 'Pantalla Completa',
+        text: 'El modo de pantalla completa ha sido activado.'
+      });
+    }
+
+    function downloadSeries() {
+      Swal.fire({
+        title: 'Descargar Episodio',
+        text: 'Selecciona un episodio para descargar:',
+        input: 'select',
+        inputOptions: {
+          0: 'Episodio 1',
+          1: 'Episodio 2',
+          2: 'Episodio 3'
+        },
+        inputPlaceholder: 'Selecciona un episodio',
+        showCancelButton: true,
+        inputValidator: (value) => {
+          return new Promise((resolve) => {
+            if (value) {
+              const downloadLinks = [
+                'LINK_DESCARGA_1',
+                'LINK_DESCARGA_2',
+                'LINK_DESCARGA_3'
+              ];
+              window.location.href = downloadLinks[value];
+              resolve();
+            } else {
+              resolve('Debes seleccionar un episodio');
+            }
+          });
+        }
+      });
+    }
+
+    const lastSeason = localStorage.getItem(`${seriesTitle}_ultimaTemporadaSeleccionada`) || 1;
+    seasonSelect.value = lastSeason;
+    changeSeason(lastSeason);
+  </script>
+</body>
+</html>
